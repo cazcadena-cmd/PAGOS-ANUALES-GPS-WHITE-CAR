@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WHITE CAR GPS - Control de Recargas SIM</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        celeste: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#00a8e8',
+                            600: '#0284c7',
+                        },
+                        brandNavy: '#134989',
+                        brandNavyDark: '#0d325e',
+                        brandBlue: '#275c98',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .font-mono-num {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .pulse-live {
+            animation: pulse-glow 2s infinite;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.85; transform: scale(1.01); }
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between">
+
+    <!-- HEADER / BRANDING OPERATIVO -->
+    <div>
+        <header class="bg-gradient-to-r from-sky-500 via-brandBlue to-brandNavy text-white shadow-xl sticky top-0 z-30">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col lg:flex-row justify-between items-center gap-4">
+                <div class="flex items-center space-x-3.5">
+                    <div class="bg-white p-2.5 rounded-2xl shadow-md text-brandNavy">
+                        <i class="fa-solid fa-car-side text-2xl"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-2xl font-extrabold tracking-tight flex items-center gap-2">
+                                WHITE CAR <span class="bg-white text-brandNavy px-2 py-0.5 rounded-lg text-sm font-bold shadow-xs">GPS</span>
+                            </h1>
+                            <span class="inline-flex items-center gap-1.5 bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 text-[10px] font-semibold px-2 py-0.5 rounded-full backdrop-blur-xs">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> SISTEMA EN VIVO
+                            </span>
+                        </div>
+                        <p class="text-xs text-sky-100 font-light mt-0.5">Gestión Operativa de Recargas Programadas SIM Tigo ($5.000 / Mes - Fondo $60.000)</p>
+                    </div>
+                </div>
+
+                <!-- CONTADOR REGRESIVO GLOBAL / OPERACIONES EN VIVO -->
+                <div class="flex flex-wrap items-center gap-3 bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/20 shadow-inner">
+                    <div class="text-right px-2">
+                        <p class="text-[10px] font-medium text-sky-100 uppercase tracking-wider">Próximo Débito Programado</p>
+                        <div id="countdown-global" class="font-mono-num text-sm sm:text-base font-bold text-white tracking-wide flex items-center gap-1">
+                            00d 00h 00m 00s
+                        </div>
+                    </div>
+                    <button onclick="ejecutarCobrosProgramadosManual()" class="bg-white hover:bg-sky-50 text-brandNavy font-semibold px-3.5 py-2 rounded-xl text-xs transition-all flex items-center gap-2 shadow-sm active:scale-95">
+                        <i class="fa-solid fa-play text-sky-500"></i> Procesar Cobros Vencidos
+                    </button>
+                    <button onclick="recargarAnualTodos()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-3.5 py-2 rounded-xl text-xs transition-all flex items-center gap-2 shadow-sm active:scale-95">
+                        <i class="fa-solid fa-bolt"></i> Renovación Anual ($60.000)
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN CONTAINER -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+            <!-- BANNER INFORMATIVO PLAN ANUAL OPERATIVO -->
+            <div class="bg-gradient-to-r from-sky-50 via-sky-100/50 to-blue-50 border border-sky-200 p-4 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 shadow-xs">
+                <div class="flex items-center space-x-3.5">
+                    <div class="w-10 h-10 rounded-xl bg-sky-500 text-white flex items-center justify-center text-lg font-bold shadow-sm">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-brandNavy">Estructura Operativa del Plan Anual Tigo GPS</h4>
+                        <p class="text-xs text-slate-600">Fondo Base: <strong>$60.000 COP</strong> &bull; Débito Automático Mensual: <strong>$5.000 COP</strong> &bull; Vigencia: <strong>12 Ciclos Mensuales</strong></p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="bg-white px-3 py-1.5 rounded-xl text-xs font-semibold text-brandBlue border border-sky-200 shadow-xs flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Conectividad M2M Tigo 4G
+                    </span>
+                </div>
+            </div>
+
+            <!-- METRICAS / KPIS -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- KPI 1 -->
+                <div class="bg-white p-5 rounded-2xl shadow-xs border border-slate-200/80 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Flota Activa</p>
+                        <h3 id="kpi-total" class="text-2xl font-extrabold text-slate-800 mt-1">0</h3>
+                        <p class="text-[11px] text-sky-600 font-medium mt-1"><i class="fa-solid fa-sim-card"></i> Líneas Telemetría Tigo</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-2xl bg-sky-50 text-sky-500 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-truck-monster"></i>
+                    </div>
+                </div>
+
+                <!-- KPI 2 -->
+                <div class="bg-white p-5 rounded-2xl shadow-xs border border-slate-200/80 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Saldo Total Habilitado</p>
+                        <h3 id="kpi-promedio" class="text-2xl font-extrabold text-slate-800 mt-1">$0</h3>
+                        <p class="text-[11px] text-emerald-600 font-medium mt-1"><i class="fa-solid fa-wallet"></i> Fondo de Cobertura</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-money-bill-wave"></i>
+                    </div>
+                </div>
+
+                <!-- KPI 3 -->
+                <div class="bg-white p-5 rounded-2xl shadow-xs border border-slate-200/80 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Promedio de Cobertura</p>
+                        <h3 id="kpi-meses-promedio" class="text-2xl font-extrabold text-slate-800 mt-1">0 Meses</h3>
+                        <p class="text-[11px] text-brandBlue font-medium mt-1"><i class="fa-solid fa-calendar-check"></i> Ciclos Restantes (de 12)</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-2xl bg-blue-50 text-brandBlue flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+                </div>
+
+                <!-- KPI 4 -->
+                <div class="bg-white p-5 rounded-2xl shadow-xs border border-slate-200/80 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Estado del Servicio</p>
+                        <h3 id="kpi-estado" class="text-xl font-bold text-slate-800 mt-1">Operativo</h3>
+                        <p class="text-[11px] text-slate-400 mt-1" id="kpi-alerta-texto">Todas las SIMs en norma</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl" id="kpi-estado-icon">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABLA Y CONTROLES DE BÚSQUEDA -->
+            <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden">
+                
+                <!-- Barra Superior de Tabla -->
+                <div class="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-50/50">
+                    <div>
+                        <h2 class="text-lg font-bold text-brandNavy">Panel de Control de Recargas Automáticas por Placa</h2>
+                        <p class="text-xs text-slate-500">Débitos automatizados de $5.000 COP/mes sincronizados con reloj en tiempo real</p>
+                    </div>
+
+                    <!-- Buscador -->
+                    <div class="relative w-full sm:w-72">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                        <input type="text" id="inputBuscar" onkeyup="filtrarTabla()" placeholder="Buscar placa o SIM Tigo..." 
+                            class="w-full pl-10 pr-4 py-2 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all">
+                    </div>
+                </div>
+
+                <!-- Contenedor Responsive Tabla -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100/70 text-slate-600 text-xs uppercase tracking-wider font-semibold">
+                                <th class="p-4">Vehículo / Placa</th>
+                                <th class="p-4">SIM Tigo (10 Dígitos)</th>
+                                <th class="p-4">Saldo Disponible</th>
+                                <th class="p-4">Progreso Plan (Meses)</th>
+                                <th class="p-4 min-w-[210px]">Cuenta Regresiva Próximo Débito</th>
+                                <th class="p-4">Estado Operativo</th>
+                                <th class="p-4 text-center">Gestión</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaCuerpo" class="divide-y divide-slate-100 text-sm">
+                            <!-- Filas dinámicas JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Footer de Tabla -->
+                <div class="p-4 bg-slate-50 text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-2 border-t border-slate-100">
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-bolt text-amber-500"></i> Los débitos de $5.000 COP se procesan en cero en el reloj de cuenta regresiva.</span>
+                    <span class="text-brandBlue font-semibold"><i class="fa-solid fa-satellite-dish text-sky-500 mr-1"></i> WHITE CAR GPS Telecomunicaciones</span>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- FOOTER OPERATIVO -->
+    <footer class="bg-brandNavyDark text-slate-300 py-6 border-t border-brandNavy text-center text-xs mt-10">
+        <p>© 2026 <strong>WHITE CAR GPS</strong>. Sistema de Monitoreo & Control de Recargas SIM en Tiempo Real.</p>
+    </footer>
+
+    <!-- MODAL DETALLES Y CUENTA REGRESIVA EN VIVO -->
+    <div id="modalDetalles" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all border border-slate-100">
+            
+            <!-- Header Modal -->
+            <div class="bg-gradient-to-r from-sky-500 via-brandBlue to-brandNavy p-5 text-white flex justify-between items-center">
+                <div class="flex items-center space-x-3.5">
+                    <div class="bg-white/20 p-2.5 rounded-xl">
+                        <i class="fa-solid fa-car-side text-2xl"></i>
+                    </div>
+                    <div>
+                        <h3 id="modalPlaca" class="text-xl font-extrabold">ABC-123</h3>
+                        <p id="modalSIM" class="text-xs text-sky-100">SIM Tigo: 3001234567</p>
+                    </div>
+                </div>
+                <button onclick="cerrarModal()" class="text-white/80 hover:text-white text-xl p-1 rounded-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Cuerpo Modal -->
+            <div class="p-6 space-y-4">
+                
+                <!-- Widget Contador Animado Modal -->
+                <div class="bg-gradient-to-br from-brandNavy to-brandNavyDark p-4 rounded-2xl text-white text-center shadow-inner">
+                    <p class="text-[11px] text-sky-200 uppercase font-medium tracking-wider mb-1">Próximo Débito Mensual ($5.000 COP)</p>
+                    <div id="modalCountdown" class="font-mono-num text-2xl font-extrabold text-sky-300 tracking-wider py-1">
+                        00d 00h 00m 00s
+                    </div>
+                    <div class="text-[10px] text-sky-100/70 flex justify-center items-center gap-2 mt-1">
+                        <span><i class="fa-regular fa-clock"></i> Renovación automática sincronizada</span>
+                    </div>
+                </div>
+
+                <!-- Metricas de Cuenta -->
+                <div class="grid grid-cols-3 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs">
+                    <div>
+                        <p class="text-slate-400">Saldo Actual</p>
+                        <p id="modalSaldo" class="font-bold text-sky-600 text-sm mt-0.5">$60.000 COP</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-400">Tarifa Mensual</p>
+                        <p class="font-bold text-slate-700 text-sm mt-0.5">$5.000 COP</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-400">Cobertura</p>
+                        <p id="modalMesesInfo" class="font-bold text-brandNavy text-sm mt-0.5">12 / 12 Meses</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 text-xs bg-sky-50/60 p-3 rounded-xl border border-sky-100">
+                    <div>
+                        <p class="text-slate-500">Último Débito Aplicado</p>
+                        <p id="modalUltimoCobro" class="font-semibold text-slate-700">2026-01-15</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-500">Próximo Débito Programado</p>
+                        <p id="modalProximoCobro" class="font-semibold text-brandBlue">2026-02-15</p>
+                    </div>
+                </div>
+
+                <!-- Historial -->
+                <div>
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Registro de Transacciones ($5.000 COP/mes)</h4>
+                    <div id="modalHistorial" class="space-y-2 max-h-40 overflow-y-auto pr-1 text-xs">
+                        <!-- Historial generado dinámicamente -->
+                    </div>
+                </div>
+
+                <div id="modalAlerta" class="hidden p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-600 text-base"></i>
+                    <span>Fondo insuficiente para el próximo período. Se requiere Renovación Anual ($60.000 COP).</span>
+                </div>
+            </div>
+
+            <!-- Footer Modal -->
+            <div class="p-4 bg-slate-50 border-t border-slate-100 flex flex-wrap justify-between items-center gap-2">
+                <button onclick="cobrarMesVehiculoIndividual()" class="bg-sky-500 hover:bg-sky-600 text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 shadow-sm active:scale-95">
+                    <i class="fa-solid fa-play"></i> Ejecutar Débito $5.000
+                </button>
+                <div class="flex gap-2">
+                    <button onclick="recargarVehiculoIndividual()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 shadow-sm active:scale-95">
+                        <i class="fa-solid fa-bolt"></i> Renovación Anual ($60.000)
+                    </button>
+                    <button onclick="cerrarModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-medium px-3.5 py-2 rounded-xl transition-all">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT DE LÓGICA DE PRODUCCIÓN Y CUENTAS REGRESIVAS -->
+    <script>
+        const SALDO_INICIAL_BASE = 60000;
+        const TARIFA_MENSUAL = 5000;
+        const TOTAL_MESES_PLAN = 12;
+
+        // TIEMPO INICIAL DE CONFIGURACIÓN DE CUENTAS REGRESIVAS (FECHAS REALES DE VENCIMIENTO)
+        const ahora = new Date().getTime();
+
+        // VEHÍCULOS OPERATIVOS CON DATES REALES DE CUENTA REGRESIVA
+        let vehiculos = [
+            {
+                placa: "ABC-123",
+                sim: "3001234567",
+                operador: "Tigo",
+                saldoInicial: SALDO_INICIAL_BASE,
+                saldoActual: 60000,
+                mesesConsumidos: 0,
+                targetTime: ahora + (18 * 3600 * 1000) + (42 * 60 * 1000) + (15 * 1000), // 18h 42m 15s
+                ultimaRecarga: "2026-01-01",
+                historial: [
+                    "2026-01-01: Plan Anual registrado. Saldo inicial de $60.000 COP habilitado (12 Meses)."
+                ]
+            },
+            {
+                placa: "XYZ-789",
+                sim: "3109876543",
+                operador: "Tigo",
+                saldoInicial: SALDO_INICIAL_BASE,
+                saldoActual: 45000,
+                mesesConsumidos: 3,
+                targetTime: ahora + (2 * 86400 * 1000) + (5 * 3600 * 1000) + (12 * 60 * 1000), // 2d 5h 12m
+                ultimaRecarga: "2026-01-01",
+                historial: [
+                    "2026-01-01: Débito automático #3 procesado (-$5.000 COP). Saldo: $45.000 COP.",
+                    "2025-12-01: Débito automático #2 procesado (-$5.000 COP). Saldo: $50.000 COP.",
+                    "2025-11-01: Débito automático #1 procesado (-$5.000 COP). Saldo: $55.000 COP.",
+                    "2025-10-15: Alta de servicio con Plan Anual $60.000 COP."
+                ]
+            },
+            {
+                placa: "WCG-456",
+                sim: "3015558822",
+                operador: "Tigo",
+                saldoInicial: SALDO_INICIAL_BASE,
+                saldoActual: 10000,
+                mesesConsumidos: 10,
+                targetTime: ahora + (1 * 86400 * 1000) + (11 * 3600 * 1000) + (30 * 60 * 1000), // 1d 11h 30m
+                ultimaRecarga: "2026-01-01",
+                historial: [
+                    "2026-01-01: Débito automático #10 procesado (-$5.000 COP). Saldo restante: $10.000 COP.",
+                    "2025-03-01: Alta de servicio con Plan Anual $60.000 COP."
+                ]
+            },
+            {
+                placa: "MNO-321",
+                sim: "3124449900",
+                operador: "Tigo",
+                saldoInicial: SALDO_INICIAL_BASE,
+                saldoActual: 60000,
+                mesesConsumidos: 0,
+                targetTime: ahora + (5 * 86400 * 1000) + (14 * 3600 * 1000), // 5d 14h
+                ultimaRecarga: "2026-01-10",
+                historial: [
+                    "2026-01-10: Carga de Plan Anual por $60.000 COP procesada con éxito."
+                ]
+            }
+        ];
+
+        let vehiculoSeleccionadoIndex = null;
+
+        // FORMATO COP
+        function formatoCOP(monto) {
+            return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(monto);
+        }
+
+        // FORMATO DE FECHA PARA VISTAS
+        function formatearFechaLegible(timestamp) {
+            const d = new Date(timestamp);
+            return d.toISOString().split('T')[0] + " " + d.toTimeString().split(' ')[0].substring(0, 5);
+        }
+
+        // FORMATO DE CUENTA REGRESIVA
+        function obtenerTiempoRestante(targetTime) {
+            const now = new Date().getTime();
+            const diff = targetTime - now;
+
+            if (diff <= 0) {
+                return { total: 0, dias: 0, horas: 0, minutos: 0, segundos: 0, expirado: true };
+            }
+
+            const segundos = Math.floor((diff / 1000) % 60);
+            const minutos = Math.floor((diff / 1000 / 60) % 60);
+            const horas = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+            return { total: diff, dias, horas, minutos, segundos, expirado: false };
+        }
+
+        function formatoCountdownText(t) {
+            if (t.expirado) return `<span class="text-rose-500 font-bold animate-pulse">¡PROCESANDO DÉBITO!</span>`;
+            const dStr = t.dias > 0 ? `${t.dias}d ` : '';
+            const hStr = String(t.horas).padStart(2, '0');
+            const mStr = String(t.minutos).padStart(2, '0');
+            const sStr = String(t.segundos).padStart(2, '0');
+            return `${dStr}${hStr}h ${mStr}m ${sStr}s`;
+        }
+
+        // RENDERIZAR TABLA BASE
+        function renderizarTabla() {
+            const cuerpo = document.getElementById('tablaCuerpo');
+            cuerpo.innerHTML = '';
+
+            vehiculos.forEach((v, index) => {
+                const mesesRestantes = Math.floor(v.saldoActual / TARIFA_MENSUAL);
+                const porcentaje = Math.max(0, Math.round((v.saldoActual / v.saldoInicial) * 100));
+                
+                let estadoBadge = '';
+                if (mesesRestantes >= 6) {
+                    estadoBadge = `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs px-2.5 py-1 rounded-full font-semibold inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Operativo</span>`;
+                } else if (mesesRestantes >= 2) {
+                    estadoBadge = `<span class="bg-amber-50 text-amber-700 border border-amber-200 text-xs px-2.5 py-1 rounded-full font-semibold inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Cobertura Media</span>`;
+                } else {
+                    estadoBadge = `<span class="bg-rose-50 text-rose-700 border border-rose-200 text-xs px-2.5 py-1 rounded-full font-semibold inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span> Renovación Requerida</span>`;
+                }
+
+                const fila = document.createElement('tr');
+                fila.className = "hover:bg-sky-50/50 transition-colors cursor-pointer group";
+                fila.innerHTML = `
+                    <td class="p-4 font-bold text-brandNavy flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-sky-100 text-brandBlue flex items-center justify-center text-sm group-hover:bg-brandBlue group-hover:text-white transition-all shadow-2xs">
+                            <i class="fa-solid fa-car"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm font-extrabold text-slate-800">${v.placa}</div>
+                            <div class="text-[11px] text-slate-400 font-normal">WHITE CAR GPS</div>
+                        </div>
+                    </td>
+                    <td class="p-4">
+                        <div class="font-mono-num font-semibold text-slate-700">${v.sim}</div>
+                        <div class="text-[11px] text-sky-600 font-semibold"><i class="fa-solid fa-signal text-[10px]"></i> Red ${v.operador}</div>
+                    </td>
+                    <td class="p-4">
+                        <div class="font-extrabold text-slate-800 text-sm">${formatoCOP(v.saldoActual)}</div>
+                        <div class="text-[11px] text-slate-400">Plan $60.000 COP</div>
+                    </td>
+                    <td class="p-4">
+                        <div class="flex justify-between text-xs mb-1 font-semibold">
+                            <span class="text-slate-700">${v.mesesConsumidos} / 12 Meses</span>
+                            <span class="text-slate-400 text-[11px]">${porcentaje}%</span>
+                        </div>
+                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                            <div class="bg-sky-500 h-full rounded-full transition-all duration-500" style="width: ${porcentaje}%"></div>
+                        </div>
+                    </td>
+                    <td class="p-4">
+                        <div id="countdown-row-${index}" class="font-mono-num font-bold text-brandBlue text-xs bg-sky-50 border border-sky-100 px-2.5 py-1.5 rounded-lg inline-block shadow-2xs">
+                            Cargando reloj...
+                        </div>
+                    </td>
+                    <td class="p-4">${estadoBadge}</td>
+                    <td class="p-4 text-center">
+                        <button onclick="abrirModal(${index})" class="text-brandBlue hover:text-white hover:bg-brandBlue bg-sky-50 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border border-sky-100">
+                            <i class="fa-solid fa-sliders"></i> Gestionar
+                        </button>
+                    </td>
+                `;
+                cuerpo.appendChild(fila);
+            });
+
+            actualizarKPIs();
+        }
+
+        // BUCLE BINDING REBOBINADO CUENTAS REGRESIVAS
+        function actualizarCuentasRegresivas() {
+            let menorTiempo = Infinity;
+
+            vehiculos.forEach((v, index) => {
+                const t = obtenerTiempoRestante(v.targetTime);
+                
+                if (t.total < menorTiempo && !t.expirado) {
+                    menorTiempo = t.total;
+                }
+
+                // Autoejecutar cobro si llega a cero automáticamente
+                if (t.expirado && v.saldoActual >= TARIFA_MENSUAL) {
+                    v.saldoActual -= TARIFA_MENSUAL;
+                    v.mesesConsumidos++;
+                    v.targetTime = new Date().getTime() + (30 * 24 * 3600 * 1000); // Siguiente mes (30 días)
+                    v.ultimaRecarga = new Date().toISOString().split('T')[0];
+                    v.historial.unshift(`${v.ultimaRecarga}: Débito automático de $5.000 COP ejecutado (Mes ${v.mesesConsumidos} de 12).`);
+                    renderizarTabla();
+                }
+
+                const el = document.getElementById(`countdown-row-${index}`);
+                if (el) {
+                    el.innerHTML = formatoCountdownText(t);
+                }
+            });
+
+            // Actualizar cuenta regresiva global (menor tiempo restante)
+            const elGlobal = document.getElementById('countdown-global');
+            if (elGlobal) {
+                if (menorTiempo !== Infinity) {
+                    const tG = obtenerTiempoRestante(new Date().getTime() + menorTiempo);
+                    elGlobal.innerHTML = formatoCountdownText(tG);
+                } else {
+                    elGlobal.innerHTML = `<span class="text-emerald-300">SIN DÉBITOS PENDIENTES</span>`;
+                }
+            }
+
+            // Actualizar modal si está abierto
+            if (vehiculoSeleccionadoIndex !== null) {
+                const vSel = vehiculos[vehiculoSeleccionadoIndex];
+                const tSel = obtenerTiempoRestante(vSel.targetTime);
+                const elModal = document.getElementById('modalCountdown');
+                if (elModal) {
+                    elModal.innerHTML = formatoCountdownText(tSel);
+                }
+            }
+        }
+
+        // ACTUALIZACIÓN DE KPIS
+        function actualizarKPIs() {
+            const totalVehiculos = vehiculos.length;
+            const sumaSaldos = vehiculos.reduce((acc, v) => acc + v.saldoActual, 0);
+            const sumaMesesRestantes = vehiculos.reduce((acc, v) => acc + Math.floor(v.saldoActual / TARIFA_MENSUAL), 0);
+            const promedioMeses = totalVehiculos > 0 ? (sumaMesesRestantes / totalVehiculos).toFixed(1) : 0;
+
+            document.getElementById('kpi-total').innerText = totalVehiculos;
+            document.getElementById('kpi-promedio').innerText = formatoCOP(sumaSaldos);
+            document.getElementById('kpi-meses-promedio').innerText = `${promedioMeses} Meses`;
+
+            const criticos = vehiculos.filter(v => (v.saldoActual / TARIFA_MENSUAL) <= 1).length;
+            const kpiEstado = document.getElementById('kpi-estado');
+            const kpiAlertaTexto = document.getElementById('kpi-alerta-texto');
+            const kpiEstadoIcon = document.getElementById('kpi-estado-icon');
+
+            if (criticos > 0) {
+                kpiEstado.innerText = `${criticos} SIM(s) Alerta`;
+                kpiEstado.className = "text-xl font-bold text-rose-600 mt-1";
+                kpiAlertaTexto.innerText = "Requieren renovación anual";
+                kpiEstadoIcon.className = "w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl";
+                kpiEstadoIcon.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i>`;
+            } else {
+                kpiEstado.innerText = "Operativo";
+                kpiEstado.className = "text-xl font-bold text-emerald-600 mt-1";
+                kpiAlertaTexto.innerText = "Saldos habilitados";
+                kpiEstadoIcon.className = "w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl";
+                kpiEstadoIcon.innerHTML = `<i class="fa-solid fa-circle-check"></i>`;
+            }
+        }
+
+        // ACCIÓN OPERATIVA: PROCESAR COBROS VENCIDOS / ADELANTAR PRÓXIMO CICLO
+        function ejecutarCobrosProgramadosManual() {
+            vehiculos.forEach(v => {
+                if (v.saldoActual >= TARIFA_MENSUAL) {
+                    v.saldoActual -= TARIFA_MENSUAL;
+                    v.mesesConsumidos++;
+                    v.targetTime = new Date().getTime() + (30 * 24 * 3600 * 1000); // Reiniciar reloj a 30 días
+                    v.ultimaRecarga = new Date().toISOString().split('T')[0];
+                    v.historial.unshift(`${v.ultimaRecarga}: Débito mensual programado aplicado (-$5.000 COP). Saldo actual: ${formatoCOP(v.saldoActual)}.`);
+                } else {
+                    v.historial.unshift(`${new Date().toISOString().split('T')[0]}: DÉBITO RECHAZADO. Fondo insuficiente. Se requiere renovación anual.`);
+                }
+            });
+            renderizarTabla();
+        }
+
+        // RENOVACIÓN ANUAL DE TODA LA FLOTA ($60.000 COP)
+        function recargarAnualTodos() {
+            const hoy = new Date().toISOString().split('T')[0];
+            vehiculos.forEach(v => {
+                v.saldoActual = SALDO_INICIAL_BASE;
+                v.mesesConsumidos = 0;
+                v.targetTime = new Date().getTime() + (30 * 24 * 3600 * 1000);
+                v.ultimaRecarga = hoy;
+                v.historial.unshift(`${hoy}: RENOVACIÓN ANUAL COMPLETA. $60.000 COP acreditados (12 Meses activados).`);
+            });
+            renderizarTabla();
+        }
+
+        // FILTRAR TABLA
+        function filtrarTabla() {
+            const query = document.getElementById('inputBuscar').value.toLowerCase();
+            const filas = document.querySelectorAll('#tablaCuerpo tr');
+
+            filas.forEach((fila, index) => {
+                const v = vehiculos[index];
+                const coincide = v.placa.toLowerCase().includes(query) || v.sim.toLowerCase().includes(query);
+                fila.style.display = coincide ? '' : 'none';
+            });
+        }
+
+        // MODAL DE DETALLES
+        function abrirModal(index) {
+            vehiculoSeleccionadoIndex = index;
+            const v = vehiculos[index];
+            const mesesRestantes = Math.floor(v.saldoActual / TARIFA_MENSUAL);
+
+            document.getElementById('modalPlaca').innerText = v.placa;
+            document.getElementById('modalSIM').innerText = `SIM Tigo: ${v.sim}`;
+            document.getElementById('modalSaldo').innerText = formatoCOP(v.saldoActual);
+            document.getElementById('modalMesesInfo').innerText = `${mesesRestantes} / 12 Meses`;
+            document.getElementById('modalUltimoCobro').innerText = v.ultimaRecarga;
+            document.getElementById('modalProximoCobro').innerText = formatearFechaLegible(v.targetTime);
+
+            const contenedorHistorial = document.getElementById('modalHistorial');
+            contenedorHistorial.innerHTML = '';
+            v.historial.forEach(item => {
+                const p = document.createElement('div');
+                p.className = "p-2 bg-slate-100 rounded-lg text-slate-700 border border-slate-200/60 flex items-start gap-2";
+                p.innerHTML = `<i class="fa-solid fa-receipt text-sky-500 mt-0.5"></i> <span>${item}</span>`;
+                contenedorHistorial.appendChild(p);
+            });
+
+            const alerta = document.getElementById('modalAlerta');
+            if (v.saldoActual < TARIFA_MENSUAL) {
+                alerta.classList.remove('hidden');
+            } else {
+                alerta.classList.add('hidden');
+            }
+
+            document.getElementById('modalDetalles').classList.remove('hidden');
+        }
+
+        function cerrarModal() {
+            vehiculoSeleccionadoIndex = null;
+            document.getElementById('modalDetalles').classList.add('hidden');
+        }
+
+        function cobrarMesVehiculoIndividual() {
+            if (vehiculoSeleccionadoIndex !== null) {
+                const v = vehiculos[vehiculoSeleccionadoIndex];
+                if (v.saldoActual >= TARIFA_MENSUAL) {
+                    v.saldoActual -= TARIFA_MENSUAL;
+                    v.mesesConsumidos++;
+                    v.targetTime = new Date().getTime() + (30 * 24 * 3600 * 1000);
+                    v.ultimaRecarga = new Date().toISOString().split('T')[0];
+                    v.historial.unshift(`${v.ultimaRecarga}: Débito mensual de $5.000 COP procesado. Saldo restante: ${formatoCOP(v.saldoActual)}.`);
+                } else {
+                    v.historial.unshift(`${new Date().toISOString().split('T')[0]}: Intento de débito rechazado por saldo insuficiente.`);
+                }
+                renderizarTabla();
+                abrirModal(vehiculoSeleccionadoIndex);
+            }
+        }
+
+        function recargarVehiculoIndividual() {
+            if (vehiculoSeleccionadoIndex !== null) {
+                const v = vehiculos[vehiculoSeleccionadoIndex];
+                const hoy = new Date().toISOString().split('T')[0];
+                v.saldoActual = SALDO_INICIAL_BASE;
+                v.mesesConsumidos = 0;
+                v.targetTime = new Date().getTime() + (30 * 24 * 3600 * 1000);
+                v.ultimaRecarga = hoy;
+                v.historial.unshift(`${hoy}: RENOVACIÓN ANUAL ACREDITADA. $60.000 COP acreditados.`);
+                renderizarTabla();
+                abrirModal(vehiculoSeleccionadoIndex);
+            }
+        }
+
+        // BUCLE EN TIEMPO REAL (CADA 1 SEGUNDO)
+        window.onload = function() {
+            renderizarTabla();
+            actualizarCuentasRegresivas();
+            setInterval(actualizarCuentasRegresivas, 1000);
+        };
+    </script>
+</body>
+</html>

@@ -404,7 +404,8 @@
               detenidoMeses: 1, diagnostico: DIAG_BLOQUEO, soluciones: SOL_BLOQUEO },
             { placa: "SQW238", sim: "3244837098", operador: "Tigo", operativo: true,  fechaInicial: "2026-07-30",
               saldoAgotado: true, alerta: ALERTA_COMANDOS, soluciones: SOL_COMANDOS },
-            { placa: "GUR046", sim: "3002705835", operador: "Tigo", operativo: true,  fechaInicial: "2026-07-15" }
+            { placa: "GUR046", sim: "3002705835", operador: "Tigo", operativo: true,  fechaInicial: "2026-07-15" },
+            { placa: "LUM483", sim: "3244837130", operador: "Tigo", operativo: true,  fechaInicial: "2026-07-01" }
         ];
 
         let vehiculos = FLOTA_BASE.map(v => Object.assign({}, v));
@@ -912,8 +913,6 @@
             return `
                 <div class="center">
                     <strong style="font-size:13px;letter-spacing:1px">${EMPRESA}</strong><br>
-                    TELECOMUNICACIONES &amp; GPS<br>
-                    NIT 901.000.000-0<br>
                     COMPROBANTE DE ESTADO DE CUENTA
                 </div>
                 <hr>
@@ -928,7 +927,7 @@
                 <div class="center">
                     DEBITOS 100% AUTOMATICOS<br>
                     SIN INTERVENCION MANUAL<br>
-                    ESTE DOCUMENTO NO ES FACTURA<br>
+                    COMPROBANTE DE PAGO<br>
                     SOPORTE: WHITE CAR GPS<br>
                     <strong>GRACIAS POR CONFIAR EN ${EMPRESA}</strong><br>
                     *** ${new Date().getFullYear()} ${EMPRESA} ***
@@ -968,8 +967,6 @@
             };
 
             line(EMPRESA, { bold: true, center: true, size: 11 });
-            line('TELECOMUNICACIONES & GPS', { center: true, size: 7 });
-            line('NIT 901.000.000-0', { center: true, size: 7 });
             line('COMPROBANTE DE ESTADO DE CUENTA', { center: true, size: 7 });
             y += 1; sep();
             par('VOUCHER', d.consecutivo);
@@ -1011,7 +1008,7 @@
             sep();
             line('DEBITOS 100% AUTOMATICOS', { center: true, size: 7 });
             line('SIN INTERVENCION MANUAL', { center: true, size: 7 });
-            line('ESTE DOCUMENTO NO ES FACTURA', { center: true, size: 7 });
+            line('COMPROBANTE DE PAGO', { center: true, size: 7 });
             line('SOPORTE: WHITE CAR GPS', { center: true, size: 7 });
             y += 1;
             line('GRACIAS POR CONFIAR EN ' + EMPRESA, { center: true, bold: true, size: 7.5 });
